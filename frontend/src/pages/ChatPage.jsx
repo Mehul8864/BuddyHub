@@ -222,7 +222,7 @@ const ChatPage = () => {
                     >
                         <GiConversation size={100} />
                         <Text fontSize={20}>
-                            Select a conversation to start messaging
+                            Select a conversation to start messaging + 
                         </Text>
                     </Flex>
                 )}
