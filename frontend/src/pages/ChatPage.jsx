@@ -231,6 +231,7 @@ const ChatPage = () => {
             </Flex>
         </Box>
     );
+    
 };
 
 export default ChatPage;
