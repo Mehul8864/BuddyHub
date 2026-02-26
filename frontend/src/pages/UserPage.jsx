@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import UserHeader from "../components/UserHeader";
 import { useParams } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
@@ -9,60 +9,107 @@ import { useRecoilState } from "recoil";
 import postsAtom from "../atoms/postsAtom";
 
 const UserPage = () => {
-    const { user, loading } = useGetUserProfile();
-    const { username } = useParams();
-    const showToast = useShowToast();
-    const [posts, setPosts] = useRecoilState(postsAtom);
-    const [fetchingPosts, setFetchingPosts] = useState(true);
+  const { user, loading } = useGetUserProfile();
+  const { username } = useParams();
+  const showToast = useShowToast();
+  const [posts, setPosts] = useRecoilState(postsAtom);
+  const [fetchingPosts, setFetchingPosts] = useState(true);
 
-    useEffect(() => {
-        const getPosts = async () => {
-            if (!user) return;
-            setFetchingPosts(true);
-            try {
-                const res = await fetch(`/api/posts/user/${username}`);
-                const data = await res.json();
-                console.log(data);
-                setPosts(data);
-            } catch (error) {
-                showToast("Error", error.message, "error");
-                setPosts([]);
-            } finally {
-                setFetchingPosts(false);
-            }
-        };
-
-        getPosts();
-    }, [username, showToast, setPosts, user]);
-
-    if (!user && loading) {
-        return (
-            <Flex justifyContent={"center"}>
-                <Spinner size={"xl"} />
-            </Flex>
-        );
+  useEffect(() => {
+    // if no username or no user yet, don't try to fetch
+    if (!username || !user) {
+      setFetchingPosts(false);
+      return;
     }
 
-    if (!user && !loading) return <h1>User not found</h1>;
+    let mounted = true;
+    const controller = new AbortController();
+    const { signal } = controller;
 
+    const getPosts = async () => {
+      setFetchingPosts(true);
+      try {
+        const url = `/api/posts/user/${encodeURIComponent(username)}`;
+        const res = await fetch(url, { signal });
+
+        if (!res.ok) {
+          // try to get helpful error text from response body
+          let msg = `${res.status} ${res.statusText}`;
+          try {
+            const text = await res.text();
+            if (text) msg = text;
+          } catch (e) {
+            /* ignore parsing error */
+          }
+          throw new Error(msg);
+        }
+
+        const data = await res.json();
+
+        if (!mounted || signal.aborted) return;
+
+        setPosts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        // ignore abort errors
+        if (err && err.name === "AbortError") return;
+
+        const message = err && err.message ? err.message : String(err);
+        // show toast safely
+        try {
+          showToast("Error", message, "error");
+        } catch (e) {
+          // in case showToast itself errors for any reason, at least avoid crash
+          // console.warn("showToast failed", e);
+        }
+
+        if (mounted && !signal.aborted) {
+          setPosts([]);
+        }
+      } finally {
+        if (mounted && !signal.aborted) setFetchingPosts(false);
+      }
+    };
+
+    getPosts();
+
+    return () => {
+      mounted = false;
+      controller.abort();
+    };
+    // keep deps stable and minimal
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username, user, setPosts, showToast]);
+
+  if (!user && loading) {
     return (
-        <>
-            <UserHeader user={user} />
-
-            {!fetchingPosts && posts.length === 0 && (
-                <h1>User has not posts.</h1>
-            )}
-            {fetchingPosts && (
-                <Flex justifyContent={"center"} my={12}>
-                    <Spinner size={"xl"} />
-                </Flex>
-            )}
-
-            {posts.map((post) => (
-                <Post key={post._id} post={post} postedBy={post.postedBy} />
-            ))}
-        </>
+      <Flex justifyContent={"center"}>
+        <Spinner size={"xl"} />
+      </Flex>
     );
+  }
+
+  if (!user && !loading) return <h1>User not found</h1>;
+
+  return (
+    <>
+      <UserHeader user={user} />
+
+      {!fetchingPosts && (!posts || posts.length === 0) && (
+        <h1>User has no posts.</h1>
+      )}
+
+      {fetchingPosts && (
+        <Flex justifyContent={"center"} my={12}>
+          <Spinner size={"xl"} />
+        </Flex>
+      )}
+
+      {posts &&
+        posts.map((post) => (
+          <Post key={post._id} post={post} postedBy={post.postedBy} />
+        ))}
+    </>
+  );
 };
 
 export default UserPage;
