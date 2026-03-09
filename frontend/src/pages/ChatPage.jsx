@@ -35,9 +35,10 @@ const ChatPage = () => {
     const { socket, onlineUsers } = useSocket();
 
     useEffect(() => {
-        socket?.on("messagesSeen", ({ conversationId }) => {
-            setConversations((prev) => {
-                const updatedConversations = prev.map((conversation) => {
+        if (!socket) return;
+        const handleMessagesSeen = ({ conversationId }) => {
+            setConversations((prev) =>
+                prev.map((conversation) => {
                     if (conversation._id === conversationId) {
                         return {
                             ...conversation,
@@ -48,10 +49,14 @@ const ChatPage = () => {
                         };
                     }
                     return conversation;
-                });
-                return updatedConversations;
-            });
-        });
+                })
+            );
+        };
+
+        socket.on("messagesSeen", handleMessagesSeen);
+        return () => {
+            socket.off("messagesSeen", handleMessagesSeen);
+        };
     }, [socket, setConversations]);
 
     useEffect(() => {
@@ -59,11 +64,10 @@ const ChatPage = () => {
             try {
                 const res = await fetch("/api/messages/conversations");
                 const data = await res.json();
-                if (data.error) {
-                    showToast("Error", data.error, "error");
+                if (!res.ok || data.error) {
+                    showToast("Error", data?.error || "Failed to load", "error");
                     return;
                 }
-                console.log(data);
                 setConversations(data);
             } catch (error) {
                 showToast("Error", error.message, "error");
@@ -75,54 +79,87 @@ const ChatPage = () => {
         getConversations();
     }, [showToast, setConversations]);
 
+    const getOtherParticipant = (conversation) => {
+        if (!conversation?.participants) return null;
+        return (
+            conversation.participants.find((p) => p._id !== currentUser._id) ||
+            conversation.participants[0]
+        );
+    };
+
     const handleConversationSearch = async (e) => {
-        e.preventDefault();
+        e?.preventDefault();
+        if (!searchText?.trim()) {
+            showToast("Info", "Please enter a username or id to search", "info");
+            return;
+        }
+
         setSearchingUser(true);
         try {
-            const res = await fetch(`/api/users/profile/${searchText}`);
+            const encoded = encodeURIComponent(searchText.trim());
+            const res = await fetch(`/api/users/profile/${encoded}`);
             const searchedUser = await res.json();
-            if (searchedUser.error) {
-                showToast("Error", searchedUser.error, "error");
+
+            if (!res.ok || searchedUser.error) {
+                showToast("Error", searchedUser?.error || "User not found", "error");
                 return;
             }
 
-            const messagingYourself = searchedUser._id === currentUser._id;
-            if (messagingYourself) {
+            if (searchedUser._id === currentUser._id) {
                 showToast("Error", "You cannot message yourself", "error");
                 return;
             }
 
-            const conversationAlreadyExists = conversations.find(
-                (conversation) =>
-                    conversation.participants[0]._id === searchedUser._id
+            // find any conversation that includes searchedUser
+            const conversationAlreadyExists = conversations.find((conversation) =>
+                conversation.participants?.some((p) => p._id === searchedUser._id)
             );
 
             if (conversationAlreadyExists) {
+                const other = getOtherParticipant(conversationAlreadyExists);
                 setSelectedConversation({
                     _id: conversationAlreadyExists._id,
-                    userId: searchedUser._id,
-                    username: searchedUser.username,
-                    userProfilePic: searchedUser.profilePic,
+                    userId: other?._id || searchedUser._id,
+                    username: other?.username || searchedUser.username,
+                    userProfilePic: other?.profilePic || searchedUser.profilePic,
                 });
+                // clear search box
+                setSearchText("");
                 return;
             }
 
+            // create a mock conversation (will be replaced by server-created conversation after first send)
             const mockConversation = {
                 mock: true,
                 lastMessage: {
                     text: "",
                     sender: "",
                 },
-                _id: Date.now(),
+                _id: `mock_${Date.now()}`,
                 participants: [
                     {
                         _id: searchedUser._id,
                         username: searchedUser.username,
                         profilePic: searchedUser.profilePic,
                     },
+                    {
+                        _id: currentUser._id,
+                        username: currentUser.username,
+                        profilePic: currentUser.profilePic,
+                    },
                 ],
             };
+
             setConversations((prevConvs) => [...prevConvs, mockConversation]);
+
+            setSelectedConversation({
+                _id: mockConversation._id,
+                userId: searchedUser._id,
+                username: searchedUser.username,
+                userProfilePic: searchedUser.profilePic,
+            });
+
+            setSearchText("");
         } catch (error) {
             showToast("Error", error.message, "error");
         } finally {
@@ -165,6 +202,7 @@ const ChatPage = () => {
                             <Input
                                 placeholder="Search for a user"
                                 onChange={(e) => setSearchText(e.target.value)}
+                                value={searchText}
                             />
                             <Button
                                 size={"sm"}
@@ -188,11 +226,7 @@ const ChatPage = () => {
                                 <Box>
                                     <SkeletonCircle size={"10"} />
                                 </Box>
-                                <Flex
-                                    w={"full"}
-                                    flexDirection={"column"}
-                                    gap={3}
-                                >
+                                <Flex w={"full"} flexDirection={"column"} gap={3}>
                                     <Skeleton h={"10px"} w={"80px"} />
                                     <Skeleton h={"8px"} w={"90%"} />
                                 </Flex>
@@ -204,13 +238,14 @@ const ChatPage = () => {
                             <Conversation
                                 key={conversation._id}
                                 isOnline={onlineUsers.includes(
-                                    conversation.participants[0]._id
+                                    conversation.participants[0]?._id
                                 )}
                                 conversation={conversation}
                             />
                         ))}
                 </Flex>
-                {!selectedConversation._id && (
+
+                {!selectedConversation || !selectedConversation._id ? (
                     <Flex
                         flex={70}
                         borderRadius={"md"}
@@ -222,16 +257,15 @@ const ChatPage = () => {
                     >
                         <GiConversation size={100} />
                         <Text fontSize={20}>
-                            Select a conversation to start messaging + 
+                            Select a conversation to start messaging +
                         </Text>
                     </Flex>
+                ) : (
+                    <MessageContainer />
                 )}
-
-                {selectedConversation._id && <MessageContainer />}
             </Flex>
         </Box>
     );
-    
 };
 
 export default ChatPage;
