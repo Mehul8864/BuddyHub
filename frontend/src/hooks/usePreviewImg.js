@@ -12,22 +12,18 @@ const usePreviewImg = ({ maxSize = 5 * 1024 * 1024, accept = "image/*" } = {}) =
   const prevUrlRef = useRef(null);
   const showToast = useShowToast();
 
-  // cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (prevUrlRef.current) {
-        URL.revokeObjectURL(prevUrlRef.current);
-        prevUrlRef.current = null;
-      }
-    };
-  }, []);
-
   const revokePrev = useCallback(() => {
     if (prevUrlRef.current) {
       URL.revokeObjectURL(prevUrlRef.current);
       prevUrlRef.current = null;
     }
   }, []);
+
+  useEffect(() => {
+    return () => {
+      revokePrev();
+    };
+  }, [revokePrev]);
 
   const handleFile = useCallback(
     (file) => {
@@ -37,7 +33,7 @@ const usePreviewImg = ({ maxSize = 5 * 1024 * 1024, accept = "image/*" } = {}) =
         return;
       }
 
-      if (!file.type || !file.type.startsWith("image/")) {
+      if (!file.type?.startsWith("image/")) {
         showToast("Invalid file type", "Please select an image file", "error");
         revokePrev();
         setImgUrl(null);
@@ -45,26 +41,24 @@ const usePreviewImg = ({ maxSize = 5 * 1024 * 1024, accept = "image/*" } = {}) =
       }
 
       if (file.size > maxSize) {
-        const mb = Math.round((maxSize / 1024 / 1024) * 10) / 10;
+        const mb = (maxSize / 1024 / 1024).toFixed(1);
         showToast("File too large", `Please select an image smaller than ${mb} MB`, "error");
         revokePrev();
         setImgUrl(null);
         return;
       }
 
-      // create object url and cleanup previous one
-      const url = URL.createObjectURL(file);
       revokePrev();
+      const url = URL.createObjectURL(file);
       prevUrlRef.current = url;
       setImgUrl(url);
     },
     [maxSize, revokePrev, showToast]
   );
 
-  // accepts an input change event or nothing
   const handleImageChange = useCallback(
     (e) => {
-      const file = e?.target?.files?.[0] ?? null;
+      const file = e?.target?.files?.[0] || null;
       handleFile(file);
     },
     [handleFile]
