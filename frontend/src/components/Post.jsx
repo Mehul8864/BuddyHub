@@ -1,6 +1,7 @@
-import { Avatar, Box, Flex, Image, Text } from "@chakra-ui/react";
+import { Avatar, Box, Flex, Image, Link, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import NextLink from "next/link";
+import { useRouter } from "next/router";
 import useShowToast from "../hooks/useShowToast";
 import Actions from "./Actions";
 import { formatDistanceToNow } from "date-fns";
@@ -12,9 +13,10 @@ import postsAtom from "../atoms/postsAtom";
 const Post = ({ post, postedBy }) => {
     const [user, setUser] = useState(null);
     const showToast = useShowToast();
-    const navigate = useNavigate();
+    const router = useRouter();
     const currentUser = useRecoilValue(userAtom);
     const [posts, setPosts] = useRecoilState(postsAtom);
+
     useEffect(() => {
         const getUser = async () => {
             try {
@@ -33,11 +35,11 @@ const Post = ({ post, postedBy }) => {
         };
         getUser();
     }, [postedBy, showToast]);
+
     const handleDeletePost = async (e) => {
         try {
             e.preventDefault();
-            if (!window.confirm("Are you sure you want to delete this post?"))
-                return;
+            if (!window.confirm("Are you sure you want to delete this post?")) return;
 
             const res = await fetch(`/api/posts/${post._id}`, {
                 method: "DELETE",
@@ -53,9 +55,11 @@ const Post = ({ post, postedBy }) => {
             showToast("Error", error.message, "error");
         }
     };
+
     if (!user) return null;
+
     return (
-        <Link to={`/${user.username}/post/${post._id}`}>
+        <Link as={NextLink} href={`/${user.username}/post/${post._id}`}>
             <Flex gap={3} mb={4} py={5}>
                 <Flex flexDirection={"column"} alignItems={"center"}>
                     <Avatar
@@ -64,7 +68,7 @@ const Post = ({ post, postedBy }) => {
                         src={user.profilePic}
                         onClick={(e) => {
                             e.preventDefault();
-                            navigate(`/${user.username}`);
+                            router.push(`/${user.username}`);
                         }}
                     />
                     <Box w="1px" h={"full"} bg="gray.light" my={2}></Box>
@@ -107,6 +111,7 @@ const Post = ({ post, postedBy }) => {
                         )}
                     </Box>
                 </Flex>
+
                 <Flex flex={1} flexDirection={"column"} gap={2}>
                     <Flex justifyContent={"space-between"} w={"full"}>
                         <Flex w={"full"} alignItems={"center"}>
@@ -115,7 +120,7 @@ const Post = ({ post, postedBy }) => {
                                 fontWeight={"bold"}
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    navigate(`/${user.username}`);
+                                    router.push(`/${user.username}`);
                                 }}
                             >
                                 {user.username}
@@ -129,18 +134,16 @@ const Post = ({ post, postedBy }) => {
                                 textAlign={"right"}
                                 color={"gray.light"}
                             >
-                                {formatDistanceToNow(new Date(post.createdAt))}{" "}
-                                ago
+                                {formatDistanceToNow(new Date(post.createdAt))} ago
                             </Text>
                             {currentUser?._id === user._id && (
-                                <DeleteIcon
-                                    size={20}
-                                    onClick={handleDeletePost}
-                                />
+                                <DeleteIcon size={20} onClick={handleDeletePost} />
                             )}
                         </Flex>
                     </Flex>
+
                     <Text fontSize={"sm"}>{post.text}</Text>
+
                     {post.img && (
                         <Box
                             borderRadius={6}
@@ -151,6 +154,7 @@ const Post = ({ post, postedBy }) => {
                             <Image src={post.img} w={"full"} />
                         </Box>
                     )}
+
                     <Flex gap={3} my={1}>
                         <Actions post={post} />
                     </Flex>

@@ -19,7 +19,8 @@ import {
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { useSocket } from "../context/SocketContext.jsx";
-import messageSound from "../assets/sounds/message.mp3";
+
+const messageSound = "/sounds/message.mp3";
 
 const MessageContainer = () => {
   const showToast = useShowToast();
@@ -31,7 +32,6 @@ const MessageContainer = () => {
   const setConversations = useSetRecoilState(conversationsAtom);
   const messageEndRef = useRef(null);
 
-  // Refs to keep handlers stable and access latest values inside socket callbacks
   const selectedConvRef = useRef(selectedConversation);
   const currentUserRef = useRef(currentUser);
   const audioRef = useRef(null);
@@ -44,22 +44,18 @@ const MessageContainer = () => {
     currentUserRef.current = currentUser;
   }, [currentUser]);
 
-  // Initialize one Audio instance
   useEffect(() => {
     try {
       audioRef.current = new Audio(messageSound);
     } catch (err) {
-      // ignore audio init errors
       audioRef.current = null;
     }
   }, []);
 
-  // Socket: newMessage handler (stable add/remove)
   useEffect(() => {
     if (!socket) return;
 
     const handleNewMessage = (message) => {
-      // Update conversations lastMessage regardless (so list updates)
       setConversations((prev) =>
         prev.map((conversation) =>
           conversation._id === message.conversationId
@@ -74,37 +70,25 @@ const MessageContainer = () => {
         )
       );
 
-      // If the incoming message belongs to the opened conversation, append it
       if (selectedConvRef.current?._id === message.conversationId) {
         setMessages((prev) => [...prev, message]);
       }
 
-      // Play notification if window not focused
       if (!document.hasFocus() && audioRef.current) {
-        // try/catch to avoid uncaught promise rejections
-        audioRef.current
-          .play()
-          .catch(() => {
-            /* ignore autoplay policies failures */
-          });
+        audioRef.current.play().catch(() => {});
       }
     };
 
     socket.on("newMessage", handleNewMessage);
     return () => {
-      // remove only that handler
       socket.off("newMessage", handleNewMessage);
     };
-    // We intentionally do not include selectedConversation or messages here:
-    // handler uses refs to access latest values.
   }, [socket, setConversations]);
 
-  // Socket: messagesSeen updates
   useEffect(() => {
     if (!socket) return;
 
     const handleMessagesSeen = ({ conversationId }) => {
-      // Only update if the currently open conversation was affected
       if (selectedConvRef.current?._id === conversationId) {
         setMessages((prev) =>
           prev.map((msg) => (msg.seen ? msg : { ...msg, seen: true }))
@@ -118,15 +102,13 @@ const MessageContainer = () => {
     };
   }, [socket]);
 
-  // Mark messages as seen when the last message is from someone else and is not seen yet
   useEffect(() => {
     if (!socket) return;
     if (!selectedConversation?._id) return;
     if (!messages?.length) return;
 
     const last = messages[messages.length - 1];
-    const lastIsFromOtherUser =
-      last && last.sender !== currentUserRef.current?._id;
+    const lastIsFromOtherUser = last && last.sender !== currentUserRef.current?._id;
     const lastNotSeen = last && !last.seen;
 
     if (lastIsFromOtherUser && lastNotSeen) {
@@ -134,17 +116,13 @@ const MessageContainer = () => {
         conversationId: selectedConversation._id,
         userId: selectedConversation.userId,
       });
-      // we rely on server to emit back "messagesSeen" to finally mark them as seen
     }
-    // only re-run when messages or selectedConversation changes
   }, [messages, selectedConversation?._id, socket]);
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Fetch messages when selectedConversation changes
   useEffect(() => {
     const getMessages = async () => {
       setLoadingMessages(true);
@@ -173,7 +151,6 @@ const MessageContainer = () => {
     };
 
     getMessages();
-    // we only want to run when selectedConversation.userId or mock changes
   }, [showToast, selectedConversation?.userId, selectedConversation?.mock]);
 
   return (
@@ -184,7 +161,6 @@ const MessageContainer = () => {
       p={2}
       flexDirection={"column"}
     >
-      {/* Message header */}
       <Flex w={"full"} h={12} alignItems={"center"} gap={2}>
         <Avatar src={selectedConversation?.userProfilePic} size={"sm"} />
         <Text display={"flex"} alignItems={"center"}>

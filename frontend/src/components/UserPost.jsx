@@ -1,13 +1,14 @@
-import { Avatar, Box, Flex, Image, Text } from "@chakra-ui/react";
+import { Avatar, Box, Flex, Image, Link, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
-import { Link } from "react-router-dom";
+import NextLink from "next/link";
 import Actions from "./Actions";
 
 const UserPost = ({ postImg, postTitle, likes, replies }) => {
     const [liked, setLiked] = useState(false);
+
     return (
-        <Link to={"/ankur/post/1"}>
+        <Link as={NextLink} href="/ankur/post/1" _hover={{ textDecoration: "none" }}>
             <Flex gap={3} mb={4} py={5}>
                 <Flex flexDirection={"column"} alignItems={"center"}>
                     <Avatar size="md" name="Ankur Sharma" src="/u3.jpeg" />
@@ -42,6 +43,7 @@ const UserPost = ({ postImg, postTitle, likes, replies }) => {
                         />
                     </Box>
                 </Flex>
+
                 <Flex flex={1} flexDirection={"column"} gap={2}>
                     <Flex justifyContent={"space-between"} w={"full"}>
                         <Flex w={"full"} alignItems={"center"}>
@@ -57,7 +59,9 @@ const UserPost = ({ postImg, postTitle, likes, replies }) => {
                             <BsThreeDots />
                         </Flex>
                     </Flex>
+
                     <Text fontSize={"sm"}>{postTitle}</Text>
+
                     {postImg && (
                         <Box
                             borderRadius={6}
@@ -68,9 +72,11 @@ const UserPost = ({ postImg, postTitle, likes, replies }) => {
                             <Image src={postImg} w={"full"} />
                         </Box>
                     )}
+
                     <Flex gap={3} my={1}>
                         <Actions liked={liked} setLiked={setLiked} />
                     </Flex>
+
                     <Flex gap={2} alignItems={"center"}>
                         <Text color={"gray.light"} fontSize="sm">
                             {replies} replies

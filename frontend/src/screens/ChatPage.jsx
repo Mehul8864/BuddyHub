@@ -110,7 +110,6 @@ const ChatPage = () => {
                 return;
             }
 
-            // find any conversation that includes searchedUser
             const conversationAlreadyExists = conversations.find((conversation) =>
                 conversation.participants?.some((p) => p._id === searchedUser._id)
             );
@@ -123,12 +122,10 @@ const ChatPage = () => {
                     username: other?.username || searchedUser.username,
                     userProfilePic: other?.profilePic || searchedUser.profilePic,
                 });
-                // clear search box
                 setSearchText("");
                 return;
             }
 
-            // create a mock conversation (will be replaced by server-created conversation after first send)
             const mockConversation = {
                 mock: true,
                 lastMessage: {

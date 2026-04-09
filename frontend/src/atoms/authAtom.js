@@ -1,8 +1,8 @@
 import { atom } from "recoil";
 
-const authScreenAtom = atom({
-    key: "authScreenAtom",
-    default: "login",
+const userAtom = atom({
+  key: "userAtom",
+  default: null,
 });
 
-export default authScreenAtom;
+export default userAtom;

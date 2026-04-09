@@ -29,7 +29,6 @@ export default function UpdateProfilePage() {
     const [updating, setUpdating] = useState(false);
 
     const showToast = useShowToast();
-
     const { handleImageChange, imgUrl } = usePreviewImg();
 
     const handleSubmit = async (e) => {
@@ -44,7 +43,7 @@ export default function UpdateProfilePage() {
                 },
                 body: JSON.stringify({ ...inputs, profilePic: imgUrl }),
             });
-            const data = await res.json(); // updated user object
+            const data = await res.json();
             if (data.error) {
                 showToast("Error", data.error, "error");
                 return;
@@ -58,6 +57,7 @@ export default function UpdateProfilePage() {
             setUpdating(false);
         }
     };
+
     return (
         <form onSubmit={handleSubmit}>
             <Flex align={"center"} justify={"center"} my={6}>
@@ -70,10 +70,7 @@ export default function UpdateProfilePage() {
                     boxShadow={"lg"}
                     p={6}
                 >
-                    <Heading
-                        lineHeight={1.1}
-                        fontSize={{ base: "2xl", sm: "3xl" }}
-                    >
+                    <Heading lineHeight={1.1} fontSize={{ base: "2xl", sm: "3xl" }}>
                         User Profile Edit
                     </Heading>
                     <FormControl id="userName">
@@ -86,10 +83,7 @@ export default function UpdateProfilePage() {
                                 />
                             </Center>
                             <Center w="full">
-                                <Button
-                                    w="full"
-                                    onClick={() => fileRef.current.click()}
-                                >
+                                <Button w="full" onClick={() => fileRef.current.click()}>
                                     Change Avatar
                                 </Button>
                                 <Input

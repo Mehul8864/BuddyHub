@@ -25,7 +25,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
-import { useParams } from "react-router-dom";
+import { useRouter } from "next/router";
 
 const MAX_CHAR = 500;
 
@@ -39,7 +39,8 @@ const CreatePost = () => {
     const showToast = useShowToast();
     const [loading, setLoading] = useState(false);
     const [posts, setPosts] = useRecoilState(postsAtom);
-    const { username } = useParams();
+    const router = useRouter();
+    const username = router.query.username;
 
     const handleTextChange = (e) => {
         const inputText = e.target.value;
@@ -103,7 +104,6 @@ const CreatePost = () => {
 
             <Modal isOpen={isOpen} onClose={onClose}>
                 <ModalOverlay />
-
                 <ModalContent>
                     <ModalHeader>Create Post</ModalHeader>
                     <ModalCloseButton />

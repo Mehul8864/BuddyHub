@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useRouter } from "next/router";
 import useShowToast from "./useShowToast";
 
 const useGetUserProfile = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { username } = useParams();
+    const router = useRouter();
+    const username = router.query.username;
     const showToast = useShowToast();
 
     useEffect(() => {
+        if (!router.isReady || !username) return;
+
         const getUser = async () => {
             try {
                 const res = await fetch(`/api/users/profile/${username}`);
@@ -28,8 +31,9 @@ const useGetUserProfile = () => {
                 setLoading(false);
             }
         };
+
         getUser();
-    }, [username, showToast]);
+    }, [router.isReady, username, showToast]);
 
     return { loading, user };
 };

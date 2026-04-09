@@ -18,14 +18,14 @@ import { BsInstagram } from "react-icons/bs";
 import { CgMoreO } from "react-icons/cg";
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
-import { Link as RouterLink } from "react-router-dom";
+import NextLink from "next/link";
 import useFollowUnfollow from "../hooks/useFollowUnfollow";
 
 const UserHeader = ({ user }) => {
     const toast = useToast();
     const currentUser = useRecoilValue(userAtom);
-    const { handleFollowUnfollow, following, updating } =
-        useFollowUnfollow(user);
+    const { handleFollowUnfollow, following, updating } = useFollowUnfollow(user);
+
     const copyURL = () => {
         const currentURL = window.location.href;
         navigator.clipboard.writeText(currentURL).then(() => {
@@ -81,12 +81,15 @@ const UserHeader = ({ user }) => {
                     )}
                 </Box>
             </Flex>
+
             <Text>{user.bio}</Text>
+
             {currentUser?._id === user._id && (
-                <Link as={RouterLink} to="/update">
+                <Link as={NextLink} href="/update">
                     <Button size={"sm"}>Update Profile</Button>
                 </Link>
             )}
+
             {currentUser?._id !== user._id && (
                 <Button
                     size={"sm"}
@@ -96,19 +99,14 @@ const UserHeader = ({ user }) => {
                     {following ? "Unfollow" : "Follow"}
                 </Button>
             )}
+
             <Flex w={"full"} justifyContent={"space-between"}>
                 <Flex gap={2} alignItems={"center"}>
-                    <Text color={"gray.light"}>
-                        {user.followers.length} followers
-                    </Text>
-                    <Box
-                        w={1}
-                        h={1}
-                        bg={"gray.light"}
-                        borderRadius={"full"}
-                    ></Box>
+                    <Text color={"gray.light"}>{user.followers.length} followers</Text>
+                    <Box w={1} h={1} bg={"gray.light"} borderRadius={"full"}></Box>
                     <Link color={"gray.light"}>instagram.com</Link>
                 </Flex>
+
                 <Flex>
                     <Box className="icon-container">
                         <BsInstagram size={24} cursor={"pointer"} />
@@ -120,10 +118,7 @@ const UserHeader = ({ user }) => {
                             </MenuButton>
                             <Portal>
                                 <MenuList bg={"gray.dark"}>
-                                    <MenuItem
-                                        bg={"gray.dark"}
-                                        onClick={copyURL}
-                                    >
+                                    <MenuItem bg={"gray.dark"} onClick={copyURL}>
                                         Copy Link
                                     </MenuItem>
                                 </MenuList>
@@ -132,6 +127,7 @@ const UserHeader = ({ user }) => {
                     </Box>
                 </Flex>
             </Flex>
+
             <Flex w={"full"}>
                 <Flex
                     flex={1}
