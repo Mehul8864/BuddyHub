@@ -1,14 +1,14 @@
-import { Avatar, Box, Flex, Image, Link, Text } from "@chakra-ui/react";
+import { Avatar, Box, Flex, Image, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
-import NextLink from "next/link";
+import { Link } from "react-router-dom";
 import Actions from "./Actions";
 
 const UserPost = ({ postImg, postTitle, likes, replies }) => {
     const [liked, setLiked] = useState(false);
 
     return (
-        <Link as={NextLink} href="/ankur/post/1" _hover={{ textDecoration: "none" }}>
+        <Link to="/ankur/post/1" style={{ textDecoration: "none" }}>
             <Flex gap={3} mb={4} py={5}>
                 <Flex flexDirection={"column"} alignItems={"center"}>
                     <Avatar size="md" name="Ankur Sharma" src="/u3.jpeg" />

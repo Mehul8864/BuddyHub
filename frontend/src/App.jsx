@@ -1,16 +1,19 @@
 import { Box, Container } from "@chakra-ui/react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import UserPage from "./pages/UserPage";
-import PostPage from "./pages/PostPage";
+import UserPage from "./screens/UserPage";
+import PostPage from "./screens/PostPage";
 import Header from "./components/Header";
-import HomePage from "./pages/HomePage";
-import AuthPage from "./pages/AuthPage";
+import HomePage from "./screens/HomePage";
+import AuthPage from "./screens/AuthPage";
 import { useRecoilValue } from "recoil";
 import userAtom from "./atoms/userAtom";
-import UpdateProfilePage from "./pages/UpdateProfilePage";
+import UpdateProfilePage from "./screens/UpdateProfilePage";
 import CreatePost from "./components/CreatePost";
-import ChatPage from "./pages/ChatPage";
-import { SettingsPage } from "./pages/SettingsPage";
+import ChatPage from "./screens/ChatPage";
+import SettingsPage from "./screens/SettingsPage";
+import NotificationsPage from "./screens/NotificationsPage";
+import BookmarksPage from "./screens/BookmarksPage";
+import SearchPage from "./screens/SearchPage";
 function App() {
     const user = useRecoilValue(userAtom);
     const { pathname } = useLocation();
@@ -67,6 +70,18 @@ function App() {
                         element={
                             user ? <SettingsPage /> : <Navigate to={"/auth"} />
                         }
+                    />
+                    <Route
+                        path="/notifications"
+                        element={user ? <NotificationsPage /> : <Navigate to={"/auth"} />}
+                    />
+                    <Route
+                        path="/bookmarks"
+                        element={user ? <BookmarksPage /> : <Navigate to={"/auth"} />}
+                    />
+                    <Route
+                        path="/search"
+                        element={user ? <SearchPage /> : <Navigate to={"/auth"} />}
                     />
                 </Routes>
             </Container>

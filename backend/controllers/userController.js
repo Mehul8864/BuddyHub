@@ -1,9 +1,11 @@
 import User from "../models/userModel.js";
 import Post from "../models/postModel.js";
+import Notification from "../models/notificationModel.js";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
+import { io, getRecipientSocketId } from "../socket/socket.js";
 
 const getUserProfile = async (req, res) => {
     // We will fetch user profile either with username or userId
@@ -135,22 +137,30 @@ const followUnFollowUser = async (req, res) => {
         const isFollowing = currentUser.following.includes(id);
 
         if (isFollowing) {
-            // Unfollow user
-            await User.findByIdAndUpdate(id, {
-                $pull: { followers: req.user._id },
-            });
-            await User.findByIdAndUpdate(req.user._id, {
-                $pull: { following: id },
-            });
+            await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } });
+            await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } });
             res.status(200).json({ message: "User unfollowed successfully" });
         } else {
-            // Follow user
-            await User.findByIdAndUpdate(id, {
-                $push: { followers: req.user._id },
+            await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } });
+            await User.findByIdAndUpdate(req.user._id, { $push: { following: id } });
+
+            // Notify the followed user
+            const notification = new Notification({
+                recipient: id,
+                sender: req.user._id,
+                type: "follow",
+                message: `${req.user.username} started following you`,
             });
-            await User.findByIdAndUpdate(req.user._id, {
-                $push: { following: id },
-            });
+            await notification.save();
+
+            const recipientSocketId = getRecipientSocketId(id);
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("newNotification", {
+                    ...notification.toObject(),
+                    sender: { _id: req.user._id, username: req.user.username, profilePic: req.user.profilePic },
+                });
+            }
+
             res.status(200).json({ message: "User followed successfully" });
         }
     } catch (err) {
@@ -270,6 +280,25 @@ const freezeAccount = async (req, res) => {
     }
 };
 
+const searchUsers = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.trim().length < 1) {
+            return res.status(400).json({ error: "Query is required" });
+        }
+        const regex = new RegExp(q.trim(), "i");
+        const users = await User.find({
+            $or: [{ username: regex }, { name: regex }],
+            _id: { $ne: req.user._id },
+        })
+            .select("username name profilePic bio")
+            .limit(20);
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 export {
     signupUser,
     loginUser,
@@ -279,4 +308,5 @@ export {
     getUserProfile,
     getSuggestedUsers,
     freezeAccount,
+    searchUsers,
 };

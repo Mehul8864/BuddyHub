@@ -13,7 +13,7 @@ import { useEffect } from "react";
 import Comment from "../components/Comment";
 import useGetUserProfile from "../hooks/useGetUserProfile";
 import useShowToast from "../hooks/useShowToast";
-import { useRouter } from "next/router";
+import { useNavigate, useParams } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
@@ -24,15 +24,15 @@ const PostPage = () => {
     const { user, loading } = useGetUserProfile();
     const [posts, setPosts] = useRecoilState(postsAtom);
     const showToast = useShowToast();
-    const router = useRouter();
-    const pid = router.query.pid;
+    const navigate = useNavigate();
+    const { pid } = useParams();
     const currentUser = useRecoilValue(userAtom);
 
     const currentPost =
         posts.find((p) => String(p._id) === String(pid)) || posts[0] || null;
 
     useEffect(() => {
-        if (!router.isReady || !pid) return;
+        if (!pid) return;
 
         const controller = new AbortController();
         const getPost = async () => {
@@ -67,7 +67,7 @@ const PostPage = () => {
         getPost();
 
         return () => controller.abort();
-    }, [router.isReady, pid, showToast, setPosts]);
+    }, [pid, showToast, setPosts]);
 
     const handleDeletePost = async () => {
         if (!currentPost) return;
@@ -90,8 +90,8 @@ const PostPage = () => {
 
             showToast("Success", "Post deleted", "success");
 
-            if (user?.username) router.push(`/${user.username}`);
-            else router.push(`/`);
+            if (user?.username) navigate(`/${user.username}`);
+            else navigate(`/`);
         } catch (error) {
             showToast("Error", error.message || "Delete request failed", "error");
         }

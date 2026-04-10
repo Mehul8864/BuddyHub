@@ -1,5 +1,5 @@
-import { Avatar, Box, Button, Flex, Link, Text } from "@chakra-ui/react";
-import NextLink from "next/link";
+import { Avatar, Box, Button, Flex, Text } from "@chakra-ui/react";
+import { Link } from "react-router-dom";
 import useFollowUnfollow from "../hooks/useFollowUnfollow";
 
 const SuggestedUser = ({ user }) => {
@@ -7,7 +7,7 @@ const SuggestedUser = ({ user }) => {
 
     return (
         <Flex gap={2} justifyContent={"space-between"} alignItems={"center"}>
-            <Link as={NextLink} href={`/${user.username}`} _hover={{ textDecoration: "none" }}>
+            <Link to={`/${user.username}`} style={{ textDecoration: "none" }}>
                 <Flex gap={2} alignItems={"center"}>
                     <Avatar src={user.profilePic} />
                     <Box>

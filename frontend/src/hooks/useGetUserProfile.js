@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams } from "react-router-dom";
 import useShowToast from "./useShowToast";
 
 const useGetUserProfile = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
-    const username = router.query.username;
+    const { username } = useParams();
     const showToast = useShowToast();
 
     useEffect(() => {
-        if (!router.isReady || !username) return;
+        if (!username) return;
 
         const getUser = async () => {
             try {
@@ -33,7 +32,7 @@ const useGetUserProfile = () => {
         };
 
         getUser();
-    }, [router.isReady, username, showToast]);
+    }, [username, showToast]);
 
     return { loading, user };
 };

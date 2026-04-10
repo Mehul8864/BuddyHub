@@ -13,11 +13,11 @@ const io = new Server(server, {
     },
 });
 
+const userSocketMap = {}; // userId: socketId
+
 export const getRecipientSocketId = (recipientId) => {
     return userSocketMap[recipientId];
 };
-
-const userSocketMap = {}; // userId: socketId
 
 io.on("connection", (socket) => {
     console.log("user connected", socket.id);
@@ -36,11 +36,23 @@ io.on("connection", (socket) => {
                 { _id: conversationId },
                 { $set: { "lastMessage.seen": true } }
             );
-            io.to(userSocketMap[userId]).emit("messagesSeen", {
-                conversationId,
-            });
+            io.to(userSocketMap[userId]).emit("messagesSeen", { conversationId });
         } catch (error) {
             console.log(error);
+        }
+    });
+
+    socket.on("typing", ({ conversationId, recipientId }) => {
+        const recipientSocketId = userSocketMap[recipientId];
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit("typing", { conversationId, senderId: userId });
+        }
+    });
+
+    socket.on("stopTyping", ({ conversationId, recipientId }) => {
+        const recipientSocketId = userSocketMap[recipientId];
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit("stopTyping", { conversationId });
         }
     });
 

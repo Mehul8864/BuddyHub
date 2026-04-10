@@ -1,7 +1,6 @@
-import { Avatar, Box, Flex, Image, Link, Text } from "@chakra-ui/react";
+import { Avatar, Box, Flex, Image, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import NextLink from "next/link";
-import { useRouter } from "next/router";
+import { Link, useNavigate } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
 import Actions from "./Actions";
 import { formatDistanceToNow } from "date-fns";
@@ -13,7 +12,7 @@ import postsAtom from "../atoms/postsAtom";
 const Post = ({ post, postedBy }) => {
     const [user, setUser] = useState(null);
     const showToast = useShowToast();
-    const router = useRouter();
+    const navigate = useNavigate();
     const currentUser = useRecoilValue(userAtom);
     const [posts, setPosts] = useRecoilState(postsAtom);
 
@@ -59,7 +58,7 @@ const Post = ({ post, postedBy }) => {
     if (!user) return null;
 
     return (
-        <Link as={NextLink} href={`/${user.username}/post/${post._id}`}>
+        <Link to={`/${user.username}/post/${post._id}`} style={{ textDecoration: "none" }}>
             <Flex gap={3} mb={4} py={5}>
                 <Flex flexDirection={"column"} alignItems={"center"}>
                     <Avatar
@@ -68,7 +67,7 @@ const Post = ({ post, postedBy }) => {
                         src={user.profilePic}
                         onClick={(e) => {
                             e.preventDefault();
-                            router.push(`/${user.username}`);
+                            navigate(`/${user.username}`);
                         }}
                     />
                     <Box w="1px" h={"full"} bg="gray.light" my={2}></Box>
@@ -120,7 +119,7 @@ const Post = ({ post, postedBy }) => {
                                 fontWeight={"bold"}
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    router.push(`/${user.username}`);
+                                    navigate(`/${user.username}`);
                                 }}
                             >
                                 {user.username}

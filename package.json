@@ -5,8 +5,8 @@
     "main": "server.js",
     "type": "module",
     "scripts": {
-        "dev": "NODE_ENV=development nodemon backend/server.js",
-        "start": "NODE_ENV=production node backend/server.js",
+        "dev": "cross-env NODE_ENV=development nodemon backend/server.js",
+        "start": "cross-env NODE_ENV=production node backend/server.js",
         "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
     },
     "keywords": [],
@@ -24,6 +24,7 @@
         "socket.io": "^4.7.5"
     },
     "devDependencies": {
+        "cross-env": "^10.1.0",
         "nodemon": "^3.1.0"
     }
 }

@@ -2,13 +2,12 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, extendTheme, ColorModeScript } from "@chakra-ui/react";
 import { mode } from "@chakra-ui/theme-tools";
-import { extendTheme } from "@chakra-ui/theme-utils";
-import { ColorModeScript } from "@chakra-ui/color-mode";
 import { BrowserRouter } from "react-router-dom";
 import { RecoilRoot } from "recoil";
 import { SocketContextProvider } from "./context/SocketContext.jsx";
+import userAtom from "./atoms/userAtom.js";
 
 const styles = {
     global: (props) => ({
@@ -33,10 +32,18 @@ const colors = {
 
 const theme = extendTheme({ config, styles, colors });
 
+function initializeRecoilState({ set }) {
+    try {
+        const stored = localStorage.getItem("user-threads");
+        if (stored) set(userAtom, JSON.parse(stored));
+    } catch {
+        localStorage.removeItem("user-threads");
+    }
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(
-    // React.StrictMode renders every component twice (in the initial render), only in development.
     <React.StrictMode>
-        <RecoilRoot>
+        <RecoilRoot initializeState={initializeRecoilState}>
             <BrowserRouter>
                 <ChakraProvider theme={theme}>
                     <ColorModeScript

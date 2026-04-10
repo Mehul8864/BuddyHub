@@ -16,10 +16,7 @@ async function sendMessage(req, res) {
         if (!conversation) {
             conversation = new Conversation({
                 participants: [senderId, recipientId],
-                lastMessage: {
-                    text: message,
-                    sender: senderId,
-                },
+                lastMessage: { text: message, sender: senderId },
             });
             await conversation.save();
         }
@@ -38,12 +35,7 @@ async function sendMessage(req, res) {
 
         await Promise.all([
             newMessage.save(),
-            conversation.updateOne({
-                lastMessage: {
-                    text: message,
-                    sender: senderId,
-                },
-            }),
+            conversation.updateOne({ lastMessage: { text: message, sender: senderId } }),
         ]);
 
         const recipientSocketId = getRecipientSocketId(recipientId);
@@ -69,10 +61,7 @@ async function getMessages(req, res) {
             return res.status(404).json({ error: "Conversation not found" });
         }
 
-        const messages = await Message.find({
-            conversationId: conversation._id,
-        }).sort({ createdAt: 1 });
-
+        const messages = await Message.find({ conversationId: conversation._id }).sort({ createdAt: 1 });
         res.status(200).json(messages);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -82,18 +71,14 @@ async function getMessages(req, res) {
 async function getConversations(req, res) {
     const userId = req.user._id;
     try {
-        const conversations = await Conversation.find({
-            participants: userId,
-        }).populate({
+        const conversations = await Conversation.find({ participants: userId }).populate({
             path: "participants",
             select: "username profilePic",
         });
 
-        // remove the current user from the participants array
         conversations.forEach((conversation) => {
             conversation.participants = conversation.participants.filter(
-                (participant) =>
-                    participant._id.toString() !== userId.toString()
+                (p) => p._id.toString() !== userId.toString()
             );
         });
         res.status(200).json(conversations);
@@ -102,4 +87,40 @@ async function getConversations(req, res) {
     }
 }
 
-export { sendMessage, getMessages, getConversations };
+async function deleteMessage(req, res) {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+
+        const message = await Message.findById(id);
+        if (!message) return res.status(404).json({ error: "Message not found" });
+        if (message.sender.toString() !== userId.toString()) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        if (message.img) {
+            const imgId = message.img.split("/").pop().split(".")[0];
+            await cloudinary.uploader.destroy(imgId);
+        }
+
+        await Message.findByIdAndDelete(id);
+
+        const conversation = await Conversation.findById(message.conversationId);
+        if (conversation) {
+            const other = conversation.participants.find((p) => p.toString() !== userId.toString());
+            const recipientSocketId = getRecipientSocketId(other?.toString());
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("messageDeleted", {
+                    messageId: id,
+                    conversationId: message.conversationId,
+                });
+            }
+        }
+
+        res.status(200).json({ message: "Message deleted" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+export { sendMessage, getMessages, getConversations, deleteMessage };

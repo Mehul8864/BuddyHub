@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import UserHeader from "../components/UserHeader";
-import { useRouter } from "next/router";
+import { useParams } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
 import { Flex, Spinner } from "@chakra-ui/react";
 import Post from "../components/Post";
@@ -10,14 +10,13 @@ import postsAtom from "../atoms/postsAtom";
 
 const UserPage = () => {
     const { user, loading } = useGetUserProfile();
-    const router = useRouter();
-    const username = router.query.username;
+    const { username } = useParams();
     const showToast = useShowToast();
     const [posts, setPosts] = useRecoilState(postsAtom);
     const [fetchingPosts, setFetchingPosts] = useState(true);
 
     useEffect(() => {
-        if (!router.isReady || !username || !user) return;
+        if (!username || !user) return;
 
         let mounted = true;
         const controller = new AbortController();
@@ -65,7 +64,7 @@ const UserPage = () => {
             mounted = false;
             controller.abort();
         };
-    }, [router.isReady, username, user, setPosts, showToast]);
+    }, [username, user, setPosts, showToast]);
 
     if (!user && loading) {
         return (

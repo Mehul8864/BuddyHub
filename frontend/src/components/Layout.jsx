@@ -1,9 +1,9 @@
 import { Box, Container } from "@chakra-ui/react";
-import { useRouter } from "next/router";
+import { useLocation } from "react-router-dom";
 import Header from "./Header";
 
 const Layout = ({ children }) => {
-  const { pathname } = useRouter();
+  const { pathname } = useLocation();
 
   return (
     <Box position={"relative"} w="full">

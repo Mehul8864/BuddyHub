@@ -3,7 +3,7 @@ import {
     Box,
     Button,
     Flex,
-    Link,
+    Link as ChakraLink,
     Menu,
     MenuButton,
     MenuItem,
@@ -13,12 +13,11 @@ import {
     useToast,
     VStack,
 } from "@chakra-ui/react";
-import React from "react";
 import { BsInstagram } from "react-icons/bs";
 import { CgMoreO } from "react-icons/cg";
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
-import NextLink from "next/link";
+import { Link } from "react-router-dom";
 import useFollowUnfollow from "../hooks/useFollowUnfollow";
 
 const UserHeader = ({ user }) => {
@@ -85,7 +84,7 @@ const UserHeader = ({ user }) => {
             <Text>{user.bio}</Text>
 
             {currentUser?._id === user._id && (
-                <Link as={NextLink} href="/update">
+                <Link to="/update">
                     <Button size={"sm"}>Update Profile</Button>
                 </Link>
             )}
@@ -104,7 +103,7 @@ const UserHeader = ({ user }) => {
                 <Flex gap={2} alignItems={"center"}>
                     <Text color={"gray.light"}>{user.followers.length} followers</Text>
                     <Box w={1} h={1} bg={"gray.light"} borderRadius={"full"}></Box>
-                    <Link color={"gray.light"}>instagram.com</Link>
+                    <ChakraLink color={"gray.light"}>instagram.com</ChakraLink>
                 </Flex>
 
                 <Flex>
