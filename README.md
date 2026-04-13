@@ -1,176 +1,217 @@
-About
+<div align="center">
+  <img src="frontend/public/light-logo.svg" alt="BuddyHub Logo" width="80" />
+  <h1>BuddyHub</h1>
+  <p>A full-stack social media platform — post, chat, follow, and connect in real time.</p>
 
-BuddyHub is a (brief one-liner describing what the project does — e.g., social scheduling app, collaboration platform for students, microservice to manage buddy matching and messaging).
+  ![Node.js](https://img.shields.io/badge/Node.js-20.x-green?logo=node.js)
+  ![React](https://img.shields.io/badge/React-18-blue?logo=react)
+  ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-brightgreen?logo=mongodb)
+  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.x-black?logo=socket.io)
+  ![Chakra UI](https://img.shields.io/badge/Chakra_UI-2.x-teal?logo=chakraui)
+</div>
 
-Replace the line above with a concise elevator pitch: what problem it solves, who benefits, and why it’s cool.
+---
 
-Features
+## What is BuddyHub?
 
-User authentication (sign up / sign in / password reset)
+BuddyHub is a Threads-inspired social platform where users can share posts, follow each other, chat in real time, get notified of activity, and save content — all in a clean, dark-mode-first UI.
 
-User profiles with avatars and bio
+---
 
-Matchmaking / buddy suggestions
+## Features
 
-Real-time chat or messaging (WebSocket / Socket.IO)
+### Auth
+- Sign up / log in with JWT (stored in httpOnly cookie)
+- Auto-login on page refresh via localStorage hydration
+- Account freeze & unfreeze
 
-Notifications (email / in-app)
+### Posts & Feed
+- Create posts with text (up to 500 chars) and images (Cloudinary)
+- Like / unlike posts
+- Reply to posts (threaded comments)
+- Delete your own posts
+- Feed of posts from people you follow
+- Bookmark / save posts for later
 
-Admin dashboard for moderation and analytics
+### People
+- User profiles with avatar, bio, followers & following count
+- Follow / unfollow users
+- Suggested users sidebar
+- Search users by username or name
 
-RESTful API + frontend (React / Vue / Svelte)
+### Messaging
+- Real-time 1-on-1 chat via Socket.IO
+- Send text and image messages
+- Typing indicators ("..." bubbles)
+- Message seen / read receipts
+- Delete your own messages
+- Online presence indicators
 
-Dockerized for consistent dev and production environments
+### Notifications
+- Real-time in-app notifications for likes, replies, and follows
+- Unread badge on the bell icon in the header
+- Mark all as read
+- Delete individual notifications
 
-(Remove or modify features according to your actual project.)
+---
 
-Tech Stack
+## Tech Stack
 
-Backend: Node.js / Express, Python / FastAPI, Ruby on Rails, or your choice
-Frontend: React / Next.js, Vue, or similar
-Database: PostgreSQL / MySQL / MongoDB
-Realtime: WebSockets / Socket.IO / Firebase
-DevOps: Docker, Docker Compose, GitHub Actions, Nginx (optional)
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite, Chakra UI, Recoil, React Router v6 |
+| Backend | Node.js, Express.js |
+| Database | MongoDB (Mongoose ODM) |
+| Real-time | Socket.IO |
+| Auth | JWT + httpOnly cookies |
+| Image storage | Cloudinary |
+| Scheduling | node-cron |
 
-Example stack snippet (replace with the stack you use):
+---
 
-Node.js 20
+## Project Structure
 
-PostgreSQL 15
+```
+BuddyHub/
+├── backend/
+│   ├── controllers/       # Route handlers
+│   ├── models/            # Mongoose schemas
+│   ├── routes/            # Express routers
+│   ├── middlewares/       # Auth middleware
+│   ├── socket/            # Socket.IO setup
+│   ├── utils/             # JWT helper
+│   ├── cron/              # Cron jobs
+│   ├── db/                # MongoDB connection
+│   └── server.js          # Entry point
+└── frontend/
+    └── src/
+        ├── atoms/         # Recoil global state
+        ├── components/    # Reusable UI components
+        ├── context/       # Socket context
+        ├── hooks/         # Custom React hooks
+        └── screens/       # Page-level components
+```
 
-Redis for caching & pub/sub
+---
 
-React 18 (frontend)
+## Getting Started
 
-Quick start
-Prerequisites
+### Prerequisites
 
-Git
+- Node.js >= 18
+- A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster (free tier works)
+- A [Cloudinary](https://cloudinary.com) account (free tier works)
 
-Node.js (>=16) / Yarn or npm
+### 1. Clone the repo
 
-Docker & Docker Compose (optional but recommended)
-
-PostgreSQL (or other DB) running locally or via Docker
-
-Clone the repo
+```bash
 git clone https://github.com/<your-username>/BuddyHub.git
 cd BuddyHub
-Install dependencies
-# backend
-cd server
-npm install      # or yarn
+```
+
+### 2. Set up environment variables
+
+Create `backend/.env`:
+
+```env
+MONGO_URI=mongodb+srv://<user>:<password>@cluster0.mongodb.net/buddyhub
+JWT_SECRET=your_super_secret_key
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+PORT=5000
+```
+
+### 3. Install dependencies
+
+```bash
+# backend (from project root)
+npm install
 
 # frontend
-cd ../client
-npm install      # or yarn
-Environment variables
+cd frontend && npm install
+```
 
-Create a .env file in the server/ folder (and client/ if needed). Example .env:
+### 4. Run the app
 
-PORT=4000
-NODE_ENV=development
-DATABASE_URL=postgres://user:password@localhost:5432/buddyhub
-JWT_SECRET=your_jwt_secret_here
-REDIS_URL=redis://localhost:6379
-SMTP_HOST=smtp.example.com
-SMTP_USER=...
-SMTP_PASS=...
-FRONTEND_URL=http://localhost:3000
+Open **two terminals**:
 
-Tip: Never commit .env to source control. Use .env.example to show required keys.
-
-Database & migrations
-
-If you use an ORM/migration tool, document commands here:
-
-# example: using Sequelize / TypeORM / Prisma
-# run migrations
-cd server
-npm run migrate
-
-# create a seed (if applicable)
-npm run seed
-Running locally
-Using Docker (recommended)
-# from project root
-docker-compose up --build
-# services: server, client, db, redis
-Without Docker
-# start DB separately (e.g., PostgreSQL)
-# server
-cd server
-npm run dev      # or `npm start`
-
-# client
-cd ../client
+```bash
+# Terminal 1 — backend (from project root)
 npm run dev
 
-Open http://localhost:3000 (frontend) and http://localhost:4000 (API) or as configured.
+# Terminal 2 — frontend
+cd frontend
+npm run dev
+```
 
-Testing
-# backend tests
-cd server
-npm test
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:5000 |
 
-# frontend tests
-cd client
-npm test
+> The Vite dev server proxies all `/api` requests to the backend automatically — no CORS issues.
 
-Add unit, integration, and end-to-end tests. Consider using Jest + Supertest for API tests and Playwright / Cypress for e2e tests.
+---
 
-Linting & formatting
-# run linter & formatter
-npm run lint
-npm run format
+## API Overview
 
-Use ESLint, Prettier (or equivalents), and include a pre-commit hook via Husky to run formatting and basic tests.
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/users/signup` | Register |
+| POST | `/api/users/login` | Login |
+| POST | `/api/users/logout` | Logout |
+| GET | `/api/users/profile/:query` | Get user by username or ID |
+| GET | `/api/users/suggested` | Suggested users |
+| GET | `/api/users/search?q=` | Search users |
+| POST | `/api/users/follow/:id` | Follow / unfollow |
+| PUT | `/api/users/update/:id` | Update profile |
+| PUT | `/api/users/freeze` | Freeze account |
+| GET | `/api/posts/feed` | Get feed posts |
+| POST | `/api/posts/create` | Create post |
+| GET | `/api/posts/:id` | Get single post |
+| DELETE | `/api/posts/:id` | Delete post |
+| PUT | `/api/posts/like/:id` | Like / unlike |
+| PUT | `/api/posts/reply/:id` | Reply to post |
+| PUT | `/api/posts/bookmark/:id` | Bookmark / unbookmark |
+| GET | `/api/posts/bookmarks` | Get saved posts |
+| GET | `/api/messages/conversations` | Get conversations |
+| GET | `/api/messages/:otherUserId` | Get messages |
+| POST | `/api/messages` | Send message |
+| DELETE | `/api/messages/:id` | Delete message |
+| GET | `/api/notifications` | Get notifications |
+| GET | `/api/notifications/unread-count` | Unread count |
+| PUT | `/api/notifications/mark-read` | Mark all read |
+| DELETE | `/api/notifications/:id` | Delete notification |
 
-Deployment
+---
 
-Short checklist for production deployment:
+## Socket.IO Events
 
-Build Docker images for server and client.
+| Event | Direction | Description |
+|---|---|---|
+| `getOnlineUsers` | Server → Client | List of online user IDs |
+| `newMessage` | Server → Client | Incoming message |
+| `messagesSeen` | Server → Client | Messages marked as read |
+| `messageDeleted` | Server → Client | Message was deleted |
+| `newNotification` | Server → Client | New like / reply / follow |
+| `typing` | Client → Server | User is typing |
+| `stopTyping` | Client → Server | User stopped typing |
+| `markMessagesAsSeen` | Client → Server | Mark conversation as read |
 
-Use environment variables from a secrets store.
+---
 
-Run DB migrations during release.
+## Roadmap
 
-Configure reverse proxy (Nginx) and SSL (Certbot / managed).
+- [ ] Group chats
+- [ ] Post scheduling
+- [ ] Hashtags and trending feed
+- [ ] Push notifications (PWA)
+- [ ] Mobile app (React Native)
+- [ ] Dark / light theme toggle per user preference saved to DB
 
-Monitor logs and uptime (Prometheus / Grafana or a hosted provider).
+---
 
-Example Docker build:
+## License
 
-# build and push images (example)
-docker build -t your-dockerhub-username/buddyhub-server:latest ./server
-docker build -t your-dockerhub-username/buddyhub-client:latest ./client
-docker push your-dockerhub-username/buddyhub-*
-CI / GitHub Actions
-
-Include a /.github/workflows/ci.yml to:
-
-run tests
-
-lint & format checks
-
-build Docker images (optional)
-
-run security scans (dependabot / snyk)
-
-You can publish to GitHub Package Registry, Docker Hub, or any container registry.
-
-When you publish, add a badge in README like:
-
-![CI](https://github.com/<your-username>/BuddyHub/actions/workflows/ci.yml/badge.svg)
-Roadmap
-
- Profile pictures and advanced privacy controls
-
- Push notifications on mobile
-
- Mobile app (React Native / Flutter)
-
- Analytics dashboard for user engagement
-
- Multi-language support (i18n)
+MIT © BuddyHub
